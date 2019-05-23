@@ -28,6 +28,7 @@
     * formatting
     * comments
 * Tests ?
+* LAME License stuff
 
 
 
