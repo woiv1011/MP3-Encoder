@@ -1,2 +1,3 @@
 tcc main.c
-main "C:\Users\Ivar\Desktop\MP3-Encoder"
+REM main "C:\Users\Ivar\Desktop\MP3-Encoder"
+main "../wavFiles/"
