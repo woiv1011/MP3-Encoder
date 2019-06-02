@@ -1,4 +1,6 @@
+
 #define DEBUG
+#include "main.h"
 
 void parseParameters() {
     //TODO check for errors, wrong usage etc
@@ -18,8 +20,6 @@ void detectNumberOfCores() {
 void findAllWavFiles() {
 }
 
-void printListOfWavFiles() {
-}
 
 void encodeAllWavFiles() {
 }
@@ -28,7 +28,6 @@ void encodeSingleWavFile() {
 }
 
 void printUsageHelp() {
-    printf("WAV to MP3 Encoder\n");
     printf("WAV to MP3 Encoder\n");
 }
 
@@ -42,16 +41,48 @@ void loadFile() {
     //TODO safety checks
 }
 
-int main(int argc, char **argv) {
-    //path = C:\Users\Ivar\Desktop\MP3-Encoder
-#ifdef DEBUG
-    printf("argc: %d\n", argc);
-    for (int i=0; i < argc; i=i+1) {
-        printf("argv[%d]: %s\n", i, argv[i]);
+int listDirectory(char *path) {
+    //int len;
+    struct dirent *pDirent;
+    DIR *pDir;
+
+    pDir = opendir (path);
+
+    if (pDir == NULL) {
+        printf ("Cannot open directory '%s'\n", path);
+        printf("errno %d: %s\n", errno, strerror(errno));
+        return 1;
     }
+
+    while ((pDirent = readdir(pDir)) != NULL) {
+        printf ("[%s]\n", pDirent->d_name);
+    }
+    closedir (pDir);
+
+    return 0;
+}
+
+int main(int argc, char **argv) {
+#if defined(DEBUG) && defined(DEBUG_VERBOSE)
+    printf("argc: '%d'\n", argc);
+    for (int i=0; i < argc; i=i+1) {
+        printf("argv[%d]: '%s'\n", i, argv[i]);
+    }
+    printf("\n");
 #endif
 
-    loadFile();
+    if ((argc != 2) || (argv[1] == NULL)) {
+        printf ("Incorrect Usage\n"); //TODO check if parameter is actually directory
+        printf ("Usage: main <dirname>\n");
+        printf ("Example: main ./wavFiles/\n");
+        return -1;
+    }
+
+    listDirectory(argv[1]);
+
+    
+
+    //loadFile();
 
 
     //verify parameters
@@ -59,21 +90,21 @@ int main(int argc, char **argv) {
     //parameter must be correctly formatted and existing folder path
 
 
-    parseParameters(); //get filenames from parameter, check for errors
+    //parseParameters(); //get filenames from parameter, check for errors
 
-    detectOS(); //windows or linux + which version
-    detectNumberOfCores();
+    //detectOS(); //windows or linux + which version
+    //detectNumberOfCores();
 
     
 
     //set global values ?, output folder etc
 
-    findAllWavFiles();
-    printListOfWavFiles();
+    //findAllWavFiles();
+    //printListOfWavFiles();
 
     //TODO Parallelization
-    encodeAllWavFiles(); //loop over all found wav files
-    encodeSingleWavFile(); //encode single file with lame
+    //encodeAllWavFiles(); //loop over all found wav files
+    //encodeSingleWavFile(); //encode single file with lame
 
 
     return 0;

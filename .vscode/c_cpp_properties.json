@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/lame-3.100/include",
+                "c:/programdata/chocolatey/lib/tinycc/tools/tcc/include",
+                "c:/programdata/chocolatey/lib/tinycc/tools/tcc/include/winapi"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "C:\\ProgramData\\chocolatey\\bin\\tcc.exe"
+        }
+    ],
+    "version": 4
+}
