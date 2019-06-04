@@ -3,3 +3,5 @@ commands.md
 #/LAME/*
 .vscode/ipch/*
 *.o
+
+lame
