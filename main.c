@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
             fseek(current_file, 0, SEEK_END);
             long file_size = ftell(current_file);
             fseek(current_file, 0, SEEK_SET); //rewind(current_file);
-            char *pcm_data = malloc(file_size - sizeof(wav_header));
+            short int *pcm_data = malloc(file_size - sizeof(wav_header));
 
             int read_header = fread(&current_header, sizeof(wav_header), 1, current_file);
 
@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
             //encode file
 
             int num_samples = current_header.data_bytes / (current_header.num_channels * (current_header.bit_depth/8)); //number of samples per channel
-            char *mp3_buffer = malloc(1000000);
+            unsigned char *mp3_buffer = malloc(1000000);
             int mp3_buffer_size = 1000000;
 
             lame_global_flags *gfp;
