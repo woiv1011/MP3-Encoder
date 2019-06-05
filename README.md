@@ -47,4 +47,16 @@
 2. add safety checks
 3. add version for other OS
 4. add multithreading
-5. 
+
+
+# TODO
++ more robust arg parsing
+    + check that parameter is actually a directory path
++ more safety checks
+    + put lame_encode_buffer etc in try-catch block or c equivalent to prevent segfault
++ check if it's a wav file by reading wav header
+
++ parallelize with pthreads
++ TEST application on windows and linux
+    + compare output with lame binary at equal settings ?
+    + 

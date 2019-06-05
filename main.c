@@ -1,6 +1,8 @@
 
-#define DEBUG
+//#define DEBUG
 #include "main.h"
+
+#define LAME_MP3_BUFFER_SIZE 1000000
 
 /*short int *extract_PCM_from_WAV(const char * path) {
     //loads wav file and returns contained PCM
@@ -40,12 +42,15 @@ void loadFile() {
 
 
 int main(int argc, char **argv) {
-#if defined(DEBUG) && defined(DEBUG_VERBOSE)
-    printf("argc: '%d'\n", argc);
+#ifdef DEBUG
+    printf(ANSI_COLOR_YELLOW);
+    printf("\nDEBUG main args:\n");
+    printf("\targc: '%d'\n", argc);
     for (int i=0; i < argc; i=i+1) {
-        printf("argv[%d]: '%s'\n", i, argv[i]);
+        printf("\targv[%d]: '%s'\n", i, argv[i]);
     }
-    printf("\n");
+    printf("DEBUG main args end\n\n");
+    printf(ANSI_COLOR_RESET);
 #endif
 
     if ((argc != 2) || (argv[1] == NULL)) {
@@ -74,12 +79,16 @@ int main(int argc, char **argv) {
         printf("errno %d: %s\n", errno, strerror(errno));
         return 1;
     }
-
+    int encode_counter = 0;
     for (int i = 0; (pDirent = readdir(pDir)) != NULL; i=i+1) { //iterate through files
         //printf ("'%s'\n", pDirent->d_name);
 
         char *file_name = malloc(strlen(pDirent->d_name + 1));
         strcpy(file_name, pDirent->d_name);
+
+        if(strlen(file_name) <= 4) { //filter out "." and ".." + anything that can't be ".wav"
+            continue;
+        }
 #ifdef DEBUG
         printf ("'%s'\n", file_name);
 #endif
@@ -88,7 +97,7 @@ int main(int argc, char **argv) {
         strcat(file_path, file_name);
         //strcpy(file_path + strlen(argv[1]), file_name); //TODO does strpcy automatically add "\0" after the copied string in dest ?
 
-        printf ("Full Path: '%s'\n", file_path);
+        
         //printf("last char: '%c' int: %d\n", file_path[strlen(file_path)], file_path[strlen(file_path)]);
 
         char *last4chars = file_name + strlen(file_name) - 4; //TODO or 5, 4 because string end doesnt get counted
@@ -105,6 +114,7 @@ int main(int argc, char **argv) {
 
 
         if (wav) {
+            printf ("%d. Input: \t'%s'\n", encode_counter, file_path);
             FILE *current_file = fopen(file_path, "r");
             wav_header current_header; // = malloc(sizeof(wav_header));
             
@@ -116,60 +126,125 @@ int main(int argc, char **argv) {
             short int *pcm_data = malloc(file_size - sizeof(wav_header));
 
             int read_header = fread(&current_header, sizeof(wav_header), 1, current_file);
+            if (read_header != 1) { //exactly one element of size 44 bytes must be read
+                printf(ANSI_COLOR_RED "\nError while reading wav header\n" ANSI_COLOR_RESET);
+            }
 
 #ifdef DEBUG
-            printf("sizeof wav header: %ld\n", sizeof(wav_header));
+            printf(ANSI_COLOR_YELLOW);
+            printf("\nDEBUG wav header:"  "\n");
+            printf("\tsizeof wav header: %ld\n", sizeof(wav_header));
             // RIFF Header
-            printf("riff_header: '%.4s'\n", current_header.riff_header);
-            printf("riff_header: '%c''%c''%c''%c'\n", current_header.riff_header[0],current_header.riff_header[1],current_header.riff_header[2],current_header.riff_header[3]);
-            printf("wav_size: %d\n", current_header.wav_size);
-            printf("wave_header: %.4s \n", current_header.wave_header);
-
+            printf("\triff_header: '%.4s'\n", current_header.riff_header);
+            printf("\twav_size: '%d'\n", current_header.wav_size);
+            printf("\twave_header: '%.4s'\n", current_header.wave_header);
             // Format Header
-            printf("fmt_header: %.4s \n", current_header.fmt_header);
-            printf("fmt_chunk_size: %d\n", current_header.fmt_chunk_size);
-            printf("audio_format: %d\n", current_header.audio_format);
-            printf("num_channels: %d\n", current_header.num_channels);
-            printf("sample_rate: %d\n", current_header.sample_rate);
-            printf("byte_rate: %d\n", current_header.byte_rate);
-            printf("sample_alignment: %d\n", current_header.sample_alignment);
-            printf("bit_depth: %d\n", current_header.bit_depth);
-
+            printf("\tfmt_header: '%.4s' \n", current_header.fmt_header);
+            printf("\tfmt_chunk_size: '%d'\n", current_header.fmt_chunk_size);
+            printf("\taudio_format: '%d'\n", current_header.audio_format);
+            printf("\tnum_channels: '%d'\n", current_header.num_channels);
+            printf("\tsample_rate: '%d'\n", current_header.sample_rate);
+            printf("\tbyte_rate: '%d'\n", current_header.byte_rate);
+            printf("\tsample_alignment: '%d'\n", current_header.sample_alignment);
+            printf("\tbit_depth: '%d'\n", current_header.bit_depth);
             //DATA
-            printf("data_header: %.4s \n", current_header.data_header);
-            printf("data_bytes: %d\n", current_header.data_bytes);
-            /*for (int j=0; j<= 43; j+=1) {
-                printf("temp: '%44c' \n", current_header.temp);
-            }*/
-            
+            printf("\tdata_header: '%.4s' \n", current_header.data_header);
+            printf("\tdata_bytes: '%d'\n", current_header.data_bytes);
+            printf("DEBUG wav header end\n\n");
+            printf(ANSI_COLOR_RESET);
 #endif
-
             int read_pcm = fread(pcm_data, 1, (file_size - sizeof(wav_header)), current_file);
+            if (read_pcm != (file_size - sizeof(wav_header))) {
+                printf(ANSI_COLOR_RED "\nError while reading pcm data\n" ANSI_COLOR_RESET);
+            }
 
-            char *file_buffer = malloc(file_size - sizeof(wav_header)); //wav header is 44 bytes long
+
+            /*if(current_header.num_channels != 2) {
+                continue; //TODO 
+            }*/
+
+            //char *pcm_buffer = malloc(file_size - sizeof(wav_header)); //wav header is 44 bytes long
 
             //remove header, 44 bytes, You can usually convert a .wav file into a .pcm file by simply stripping off the first 44 bytes which is just a header with sample rate info etc. They header length can vary, but I've only seen 44 byte headers.
             //TODO is the header guaranteed to be 44 bytes ? find better way to load pcm from wav
 
-            //loadAndEncode(file_path);
-            //current_file = 
-            //open and load file
-            //encode file
 
-            int num_samples = current_header.data_bytes / (current_header.num_channels * (current_header.bit_depth/8)); //number of samples per channel
-            unsigned char *mp3_buffer = malloc(1000000);
-            int mp3_buffer_size = 1000000;
+            //TODO maybe mono files don't work ? wrong samplerate etc
+
 
             lame_global_flags *gfp;
+            gfp = lame_init();
+
+
+            //int num_samples = current_header.data_bytes / (current_header.num_channels * (current_header.bit_depth/8)); //number of samples per channel
+            int num_samples = current_header.data_bytes / (2 * (current_header.bit_depth/8)); //must be 2 channels, because i'm using encode_interleaved
+
+
+            lame_set_num_samples(gfp, num_samples);
+            lame_set_num_channels(gfp, current_header.num_channels);
+            lame_set_in_samplerate(gfp, current_header.sample_rate);
+
+            lame_set_out_samplerate(gfp, 0); //default = 0; lame picks best value
+            lame_set_brate(gfp, 192); //TODO scale of int value
+            lame_set_quality(gfp, 5);   // 5 = good quality, fast
+            //lame_set_mode(gfp, TODO);
+
+
+
+            int ret_code = lame_init_params(gfp); //TODO Check that ret_code >= 0.
+            if (ret_code < 0) {
+                printf(ANSI_COLOR_RED "\nlame_init_params() ret code error\n" ANSI_COLOR_RESET);
+            }
+
+
+
+            
+            long int mp3_buffer_size = 1.25*num_samples + 7200; //worst case estimate according to lame/API
+            unsigned char *mp3_buffer = malloc(mp3_buffer_size);
+
+
+
             int mp3_bytes = lame_encode_buffer_interleaved(gfp, pcm_data, num_samples, mp3_buffer, mp3_buffer_size);
+
+
+            if (mp3_bytes < 0) {
+                printf(ANSI_COLOR_RED "\nlame encode error\n" ANSI_COLOR_RESET);
+            }
+
+            long int mp3_flush_buffer_size = 7200;
+            unsigned char *mp3_flush_buffer = malloc(mp3_flush_buffer_size);
+
+            int mp3_flush_bytes = lame_encode_flush(gfp, mp3_flush_buffer, mp3_flush_buffer_size);
+
+            //char *file_path
+
+            char *mp3_file_path = malloc(strlen(file_path) + 1);
+            strcpy(mp3_file_path, file_path);
+            strcpy(mp3_file_path + strlen(mp3_file_path) - 4, ".mp3");
+
+            
+
+            FILE *mp3_file = fopen(mp3_file_path, "wb");
+
+
+            fwrite(mp3_buffer, 1, mp3_bytes, mp3_file);
+            fwrite(mp3_buffer, 1, mp3_flush_bytes, mp3_file);
+
+            fclose(mp3_file);
+            printf ("%d. Output: \t'%s'\n", encode_counter, mp3_file_path);
+            encode_counter += 1;
+
+
             fclose(current_file);
             free(mp3_buffer);
 #ifdef DEBUG
-            break;
+            //break;
 #endif
         }
 
     } //end for
+    printf ("\n'%d' WAV files encoded.\n", encode_counter);
+
     closedir (pDir);
     
 
@@ -179,32 +254,10 @@ int main(int argc, char **argv) {
 #endif
     
 
-
-
-
-    //TODO encodeFile()
-    //3. Initialize the encoder.  sets default for all encoder parameters.
-    
-    //gfp = lame_init();
-
-    //3.1 more settings, siehe lame API bzw. lame.h
-
-
-
-    //4. Set more internal configuration based on data provided above,
-    //as well as checking for problems.  Check that ret_code >= 0.
-    //int ret_code = lame_init_params(gfp);
-
-    //loads wav file and returns contained PCM
-    
-
-    //short int *left_pcm = NULL;
-    //short int *right_pcm = NULL;
-    /*short int *right_pcm = NULL;
     
 
     //5. Encode some data
-    /*int mp3_bytes = lame_encode_buffer(gfp,
+    /* int mp3_bytes = lame_encode_buffer(gfp,
         left_pcm,
         right_pcm,
         num_samples,
@@ -303,6 +356,6 @@ int main(int argc, char **argv) {
     //encodeAllWavFiles(); //loop over all found wav files
     //encodeSingleWavFile(); //encode single file with lame
 
-
+    printf("Exit.\n");
     return 0;
 }

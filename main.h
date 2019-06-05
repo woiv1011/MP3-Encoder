@@ -4,11 +4,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
-#include <lame.h>
+//#include <lame.h>
+#include <math.h>
+#include <lame/lame.h>
 #include <errno.h>
+#include <sys/stat.h> //to determine file type WAV
+
 #define TEST 1
 
-#include <sys/stat.h> //to determine file type WAV
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
+
 
 #pragma pack(push, 1)
 typedef struct wav_header {
