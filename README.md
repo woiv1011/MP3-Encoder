@@ -18,7 +18,7 @@
 * Filepath parsing must be compatible with both linux and windows
     * Regex filename ending or check manually
         * what if filename doesn't have .wav ending (linux ?)
-* Error safety checks, exceptions handling, etc
+* Error safety checks, exception handling, etc
 
 
 
@@ -54,9 +54,14 @@
     + check that parameter is actually a directory path
 + more safety checks
     + put lame_encode_buffer etc in try-catch block or c equivalent to prevent segfault
-+ check if it's a wav file by reading wav header
-
+    + check if it's a wav file by reading wav header instead/in addition to checking last 4 chars
+    + replace all variants of string function with n variants, when possible
 + parallelize with pthreads
 + TEST application on windows and linux
-    + compare output with lame binary at equal settings ?
-    + 
+    + MAYBE compare output with lame binary at equal settings ?
++ Clean up Code
++ MAYBE port to C++ for exception handling ?
+
+
+
+

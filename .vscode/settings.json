@@ -1,8 +1,9 @@
 {
   "files.exclude": {
-    ".vscode\\ipch": true
-},
-"files.associations": {
+    ".vscode\\ipch": true,
+    "lame": true
+  },
+  "files.associations": {
     "lame.h": "c"
-}
+  }
 }

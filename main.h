@@ -10,7 +10,9 @@
 #include <errno.h>
 #include <sys/stat.h> //to determine file type WAV
 
-#define TEST 1
+#include <pthread.h>
+
+//#define DEBUG 1
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
@@ -21,12 +23,12 @@
 #pragma pack(push, 1)
 typedef struct wav_header {
     // RIFF Header
-    unsigned char riff_header[4]; // Contains "RIFF"
+    char riff_header[4]; // Contains "RIFF"
     unsigned int wav_size; // Size of the wav portion of the file, which follows the first 8 bytes. File size - 8
-    unsigned char wave_header[4]; // Contains "WAVE"
+    char wave_header[4]; // Contains "WAVE"
     
     // Format Header
-    unsigned char fmt_header[4]; // Contains "fmt " (includes trailing space)
+    char fmt_header[4]; // Contains "fmt " (includes trailing space)
     unsigned int fmt_chunk_size; // Should be 16 for PCM
     unsigned short audio_format; // Should be 1 for PCM. 3 for IEEE Float
     unsigned short num_channels;
@@ -40,7 +42,7 @@ typedef struct wav_header {
     unsigned int data_bytes; // Number of bytes in data. Number of samples * num_channels * sample byte size
     // uint8_t bytes[]; // Remainder of wave file is bytes
 } __attribute__((packed)) wav_header;
-#pragma pack(pop)
+#pragma pack(pop) //TODO doppelt notwendig/sinnvoll ?
 
 
 #endif

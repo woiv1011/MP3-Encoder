@@ -11,7 +11,11 @@ main.out: main.o
 main.o: main.c main.h
 	$(LINUX_CC) $(CFLAGS) -c main.c -o main.o
 clean:
-	rm -f *.o main.out 
+	rm -f *.o main.out
+clean_mp3:
+	# deletes all mp3 files in the folder, not just recently encoded ones
+	# TODO check for file date etc
+	rm -f ./wavFiles/*.mp3 
 run: main.out
 	./main.out ./wavFiles/
 
