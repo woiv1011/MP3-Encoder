@@ -1,19 +1,20 @@
 #ifndef MAIN_H
 #define MAIN_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
-//#include <lame.h>
 #include <math.h>
-#include <lame/lame.h>
 #include <errno.h>
-#include <sys/stat.h> //to determine file type WAV
 
 #include <pthread.h>
+#include <lame/lame.h>
 
 //#define DEBUG 1
 
+
+//for color output, errors, etc
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
@@ -41,8 +42,7 @@ typedef struct wav_header {
     unsigned char data_header[4]; // Contains "data"
     unsigned int data_bytes; // Number of bytes in data. Number of samples * num_channels * sample byte size
     // uint8_t bytes[]; // Remainder of wave file is bytes
-} __attribute__((packed)) wav_header;
+} __attribute__((packed)) wav_header_t; //
 #pragma pack(pop) //TODO doppelt notwendig/sinnvoll ?
-
 
 #endif

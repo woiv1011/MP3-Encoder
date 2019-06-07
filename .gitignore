@@ -4,5 +4,8 @@ commands.md
 .vscode/ipch/*
 *.o
 *.mp3
+*.wav
+*.out
+
 
 lame

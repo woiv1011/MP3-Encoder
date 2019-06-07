@@ -1,9 +1,9 @@
 LINUX_CC=gcc
 WINDOWS_CC=x86_64-w64-mingw32-gcc
 CFLAGS= -g -Wall -static
-LIBS= libmp3lame.a -lm
+LIBS= libmp3lame.a -lm -pthread
 
-DEBUG =  -I"./lame/include"
+DEBUG =  -I"./lame/include" -pthread
 TEST = gcc -o main.out main.c
 
 main.out: main.o
@@ -18,6 +18,11 @@ clean_mp3:
 	rm -f ./wavFiles/*.mp3 
 run: main.out
 	./main.out ./wavFiles/
+test:
+	./main.out ./wavFiles/
+	./main.out ./wavFiles
+	#add more tests, empty folder etc
+
 
 
 
