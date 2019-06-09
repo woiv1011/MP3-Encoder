@@ -65,3 +65,4 @@
 
 
 
+vs code and terminal output lag

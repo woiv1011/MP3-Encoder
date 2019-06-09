@@ -11,7 +11,14 @@
 #include <pthread.h>
 #include <lame/lame.h>
 
+#include <sys/sysinfo.h> //for number of cores
+
 //#define DEBUG 1
+//#define PRINT 1
+
+unsigned int encode_counter = 0;
+
+int encodeWavFile(const char *file_path, FILE *wav_file);
 
 
 //for color output, errors, etc
@@ -19,7 +26,12 @@
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
+#define DEBUG_INFO printf ("DEBUG function: %s, file: \"%s\", line: %d \n", __func__, __FILE__, __LINE__) 
 
+typedef struct encoding_thread_parameters_s {
+    char *file_path;
+    FILE *wav_file;
+} encoding_thread_parameters_t;
 
 #pragma pack(push, 1)
 typedef struct wav_header {
@@ -46,3 +58,9 @@ typedef struct wav_header {
 #pragma pack(pop) //TODO doppelt notwendig/sinnvoll ?
 
 #endif
+
+/*
+//what do i want ?
+int check_and_encode_wavFile(either FILE* or filepath) {
+    return 1 if successful
+}*/
