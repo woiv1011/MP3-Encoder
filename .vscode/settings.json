@@ -4,6 +4,8 @@
     "lame": true
   },
   "files.associations": {
-    "lame.h": "c"
-  }
+    "lame.h": "c",
+    "memory": "c",
+    "xlocale": "c"
+}
 }

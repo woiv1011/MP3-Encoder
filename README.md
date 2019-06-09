@@ -66,3 +66,23 @@
 
 
 vs code and terminal output lag
+
+
+#TODO
++ mp3 files get sped up by factor of 2
+    + probably num_channels problem, test with stereo file
+
++ directories ending in wav produce error message
+
+
+
+i tend to prefer long, readable names/identifiers instead of abbreviations that one has to be familiar with
+
+2240 wav files
+2691 printed out
+
+495 wav files
+738 printed out
+7 other files in folder
+3 other subdirectories
+505 total elements
