@@ -106,3 +106,6 @@ create version where single thread reads directory
 + when running the multithreaded program the first time after "make clean_mp3", some files get encoded twice ?
     + presumably some issue with filesystem, readdir is not properly thread-safe, even though I use locks ?
     + TODO iterate through directory on single thread
+
+
+TODO test with large wav files to check for memory problems, buffer size etc

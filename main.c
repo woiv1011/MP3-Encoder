@@ -2,7 +2,7 @@
 
 #ifdef DEBUG
 void printWavHeader(const wav_header_t *current_header) {
-    printf(ANSI_COLOR_YELLOW);
+    //printf(ANSI_COLOR_YELLOW);
     printf("\nDEBUG wav header:"  "\n");
     printf("\tsizeof wav header: %ld\n", sizeof(wav_header_t));
     // RIFF Header
@@ -22,55 +22,11 @@ void printWavHeader(const wav_header_t *current_header) {
     printf("\tdata_header: '%.4s' \n", current_header->data_header);
     printf("\tdata_bytes: '%d'\n", current_header->data_bytes);
     printf("DEBUG wav header end\n\n");
-    printf(ANSI_COLOR_RESET);
+    //printf(ANSI_COLOR_RESET);
 }
 #endif
 
-int print_dir() {
-    struct dirent *pDirent;
-    for (int i = 0; (pDirent = readdir(pDir)) != NULL; i=i+1) { //iterate through files
-        printf("i: %d\t", i);
-        printf("'%s'\n", pDirent->d_name);
-    }
-    return 0;
-}
-
-typedef struct wav_file_s wav_file_t;
-typedef struct wav_file_s{
-    wav_file_t *next;
-    char filename[256];
-    FILE *pFile;
-} wav_file_t;
-
-
-/*int import_wav_file_list() {
-    struct dirent *pDirent;
-    for (int i = 0; (pDirent = readdir(pDir)) != NULL; i=i+1) { //iterate through files
-        printf("i: %d\t", i);
-        printf("'%s'\n", pDirent->d_name);
-        fopen();
-        if(isWavFile()) {
-
-
-        }
-    }
-    return 0;
-}
-
-int deallocate_wav_file_list() {
-    for(;;) { //iterate through list
-        fclose();
-        next = current.next;
-        free(current);
-    } 
-}
-
-int get_next_wav_file() {
-
-}*/
-
-
-struct dirent *get_next_directory_entry() {
+/*struct dirent *get_next_directory_entry() {
     pthread_mutex_lock(&lock_pDir);  //lock pDir
 
     struct dirent *pDirent = NULL;
@@ -87,134 +43,196 @@ struct dirent *get_next_directory_entry() {
     
     pthread_mutex_unlock(&lock_pDir);
     return output;
+}*/
+
+/*int print_dir() {
+    struct dirent *pDirent;
+    for (int i = 0; (pDirent = readdir(pDir)) != NULL; i=i+1) { //iterate through files
+        printf("i: %d\t", i);
+        printf("'%s'\n", pDirent->d_name);
+    }
+    return 0;
+}*/
+
+//single-thread import, dirent.h readdir() causes certain bugs when multithreaded, even with locks
+int import_wav_file_path_list(const char *directory_path) {
+    //parameter must be correctly formatted and existing folder path
+    //directory_path = malloc(strlen(argv[1]) + 1); //TODO create maximum directory and filepath lengths
+    //strcpy(directory_path, argv[1]);
+    DIR *pDir = opendir(directory_path);
+    if (pDir == NULL) {
+#ifdef ERRORS
+        printf("Cannot open directory '%s'\n", directory_path);
+        printf("errno %d: %s\n", errno, strerror(errno));
+#endif
+        return -1;
+    }
+
+//TODO wird speicher für file_path beim allokieren der struct auch schon allokiert ?
+
+    struct dirent *pDirent;
+    unsigned int file_counter = 0;
+    for (int i = 0; (pDirent = readdir(pDir)) != NULL; i=i+1) { //iterate through files
+        char *file_path = malloc(MAX_PATH_LENGTH);
+        strncpy(file_path, directory_path, MAX_PATH_LENGTH);
+        strncat(file_path, pDirent->d_name, MAX_PATH_LENGTH);
+#ifdef DEBUG
+        printf("%d. import\n", file_counter); //TODO turn .256s into preprocessor macro with max path length
+#endif
+        file_counter += 1;
+        if(isWavFile(file_path)) {
+            wav_file_t *new_wav_file = malloc(sizeof(wav_file_t));
+#ifdef DEBUG
+        //printf("sizeof(wav_file_t): '%ld'\n", sizeof(wav_file_t));
+#endif
+            new_wav_file->next = NULL;
+            strncpy(new_wav_file->file_path, file_path, MAX_PATH_LENGTH);
+            if(current_wav_file == NULL) { //begin list
+                current_wav_file = new_wav_file;
+                start_wav_file = new_wav_file;
+            } else { //append to list
+                current_wav_file->next = new_wav_file;
+                current_wav_file = new_wav_file;
+            }
+            wav_file_counter += 1;
+        } else {
+            continue; //TODO aktuell unnötig
+        }
+    }
+
+    //unsigned int file_path_malloc_size = 0;
+    //char *file_path = malloc(file_path_malloc_size = (strlen(argv[1]) + strlen(file_name) + 1));
+    //char *file_path = malloc(file_path_malloc_size = (strlen(directory_path) + strlen(file_name) + 1));
+
+    //strcpy(file_path, directory_path);
+    //strcat(file_path, file_name);
+    closedir(pDir);
+    current_wav_file = start_wav_file; //reset to start for reading
+    printf("%d WAV files found / imported\n", wav_file_counter);
+    return 0;
 }
 
-void *encoding_thread_function(void *data) {
-    //infinite loop that tests for wav Files to be encoded
-    struct dirent *pDirent;
+/*int deallocate_wav_file_list() {
+    for(;;) { //iterate through list
+        fclose();
+        next = current.next;
+        free(current);
+    } 
+}*/
+
+
+
+char *get_next_wav_file_path() {
+    //FILE *wav_file = fopen(current_wav_file->file_path, "r");
+    if(current_wav_file == NULL) {
+        return NULL;
+    }
+    char *output = current_wav_file->file_path;
+    current_wav_file = current_wav_file->next;
+    return output;
+}
+
+void *encoding_thread_function(void *data_unused) {
+    printf("encode thread function on thread %ld\n", (long) pthread_self());
+    //struct dirent *pDirent = NULL;
+    //FILE *wav_file = NULL;
     int i = 0; //per-thread local encode counter
-    while(1) {
-        pthread_mutex_lock(&lock_pDir);  //lock pDir
-        //pDirent = get_next_directory_entry();
-        pDirent = readdir(pDir);
+
+    while(1) { //infinite loop that polls for wav Files to be encoded
+        pthread_mutex_lock(&lock_pDir);
+        //FILE *wav_file = fopen(get_next_wav_file_path(), "r");
+        char *wav_file_path = get_next_wav_file_path();
         pthread_mutex_unlock(&lock_pDir);
 
-        if (pDirent == NULL) {
-            //TODO end of directory reached
-            //free(file_name); //TODO where is the leak ?
+        if (wav_file_path == NULL) { //end of directory reached
             printf("thread %ld local encode counter: %d\n", (long) pthread_self(), i);
             //pthread_exit(NULL);
             return NULL; //TODO is it a problem that this doesnt get called ? if pthread exit
         } else {
             //unsigned int file_name_malloc_size = 0; //malloc size variables for debug
-            char *file_name;// = malloc(file_name_malloc_size = (strlen(pDirent->d_name) + 1)); //TODO watch out for accidental pointer addition
-            file_name = malloc(MAX_PATH_LENGTH); //TODO watch out for accidental pointer addition
-            strcpy(file_name, pDirent->d_name);
+            //char *file_name;// = malloc(file_name_malloc_size = (strlen(pDirent->d_name) + 1)); //TODO watch out for accidental pointer addition
+            //file_name = malloc(MAX_PATH_LENGTH); //TODO watch out for accidental pointer addition
+            //strcpy(file_name, pDirent->d_name);
 
-#ifdef DEBUG
-            printf ("directory_path: %s    file_name: %s\n", directory_path, file_name);
-            printf ("strlen(directory_path): %ld    strlen(file_name): %ld\n", strnlen(directory_path, MAX_PATH_LENGTH), strnlen(file_name, MAX_PATH_LENGTH)); //TODO does strnlen work ?
-#endif
+            //printf("Thread ID is: %ld", (long) pthread_self());
+            int encode_successful = encodeWavFile(wav_file_path);
+            if (encode_successful) {
+                pthread_mutex_lock(&lock_encode_counter);
+                encode_counter += 1; //TODO only do this once at the end, for performance, aggregate all local thread counters
 
-            if(strlen(file_name) <= 4) { //filter out "." and "..", anything that can't be ".wav" // TODO move this into isWavFile()
-                free(file_name);
-                continue;
+                pthread_mutex_unlock(&lock_encode_counter);
+            } else {
+
             }
+            i=i+1; //local, perthread encode counter
 
-            unsigned int file_path_malloc_size = 0;
-            //char *file_path = malloc(file_path_malloc_size = (strlen(argv[1]) + strlen(file_name) + 1));
-            char *file_path = malloc(file_path_malloc_size = (strlen(directory_path) + strlen(file_name) + 1));
-
-            strcpy(file_path, directory_path);
-            strcat(file_path, file_name);
-
-            int wav = 0;
-            FILE *wav_file = fopen(file_path, "r");
-#ifdef DEBUG
-            printf("wav_file: %d", (wav_file)); //TODO always the same pointer address ?
-#endif
-            wav = isWavFile(file_path, wav_file);
-
-            if (wav) {
-                //printf("Thread ID is: %ld", (long) pthread_self());
-                int encode_successful = encodeWavFile(file_path, wav_file);
-                if (encode_successful) {
-                    pthread_mutex_lock(&lock_encode_counter);
-                    printf("%d. WAV: \t'%s' encoded on thread %ld\n", encode_counter, file_path, (long) pthread_self());
-                    encode_counter += 1; //TODO only do this once at the end, for performance
-                    pthread_mutex_unlock(&lock_encode_counter);
-                }
-                i=i+1; //local, perthread encode counter
-            
-            //printf("%d. MP3 Out: \t'%s'\n", encode_counter);//, mp3_file_path); //segfault if there is no parameter for %s
-            }
-            
-            free(file_name); //TODO one large, permanent array for filename is better for performance
-            free(file_path); //TODO one large, permanent array for filepath is better for performance
-            fclose(wav_file);
+            //free(file_name); //TODO one large, permanent array for filename is better for performance
         }
-
-        //free(pDirent);
-        
-        
-        //TODO maybe store encode counter internally and only write once at the end, breaks file by file cli output though
+        //fclose(wav_file);
     } //end while(1)
 
+        
 
-    //get file to encode //from dirent with lock
-    //(optional) print info to cli
-    //encode file
-    //if successful, increase encode_counter with lock
 
-        
-        
-        //TODO filepath is incorrect when concatenating to a folder path thats not ending in slash
-        
-        //TODO compare from file header as well
-        //TODO make properly case insensitive
     //return NULL;
     return 0;
 }
 
-int isWavFile(const char *file_path, FILE *current_file) {
-    //TODO accepts files only based on last 4 chars as WAV files, not guaranteed to work
+int isWavFile(const char *file_path) {
+    //TODO filepath is incorrect when concatenating to a folder path thats not ending in slash
+#ifdef DEBUG
+    printf("\tfile_path: '%.256s'\n", file_path); 
+    printf("\tstrlen(file_path): %ld\n", strlen(file_path));
+    //printf ("directory_path: %s    file_name: %s\n", directory_path, file_name);
+    //printf ("strlen(directory_path): %ld    strlen(file_name): %ld\n", strnlen(directory_path, MAX_PATH_LENGTH), strnlen(file_name, MAX_PATH_LENGTH)); //TODO does strnlen work ?
+#endif
+
+    FILE *current_file = fopen(file_path, "r");
+
     //determine file size
     fseek(current_file, 0, SEEK_END);
     long file_size = ftell(current_file);
     fseek(current_file, 0, SEEK_SET); //rewind(wav_file);
 #ifdef DEBUG
-    printf("file_size: %ld  sizeof wav_header: %ld\n", file_size, sizeof(wav_header_t));
+    printf("\tfile_size: %ld\n", file_size);
 #endif
 
-    int last3chars_correct = 0; //can not be -1, because that is boolean true
+    int last4chars_correct = 0; //can not be -1, because that is boolean true
 
     int header_correct = 0;
     wav_header_t current_header;
 
-    last3chars_correct = strncmp("wav", (file_path + strlen(file_path) - 3), 3) == 0 || strncmp("WAV", (file_path + strlen(file_path) - 3), 3) == 0;
+    //filter out "." and "..", anything that can't be ".wav" // TODO move this into isWavFile()
+
+    //TODO make properly case insensitive
+    last4chars_correct = strlen(file_path) >= 4 && (strncmp(".wav", (file_path + strlen(file_path) - 4), 4) == 0 || strncmp(".WAV", (file_path + strlen(file_path) - 4), 4) == 0);
+    if(!last4chars_correct) {
+        return 0;
+    }
+    
     if(file_size > sizeof(wav_header_t)) {
         int read_header = fread(&current_header, sizeof(wav_header_t), 1, current_file);
         if (read_header != 1) { //exactly one element of size 44 bytes must be read
 #ifdef ERRORS
-            printf(ANSI_COLOR_RED "\nError while reading wav header\n" ANSI_COLOR_RESET);
+            printf(ANSI_COLOR_RED "Error while reading wav header\n" ANSI_COLOR_RESET);
 #endif
             return 0; //TODO, cannot be -1 because of connection to encodeCounter
         } else {
             //printf(ANSI_COLOR_YELLOW "\nNo Error while reading wav header\n" ANSI_COLOR_RESET);
-            header_correct = strncmp("WAVE", current_header.wave_header, 4) == 0 && strncmp("RIFF", current_header.riff_header, 4) == 0;
+            header_correct = (0 == strncmp("WAVE", current_header.wave_header, 4)) && (0 == strncmp("RIFF", current_header.riff_header, 4));
         }
     }
 #ifdef DEBUG
-    printf("\t\tisWavFile()\n");
-    printf("\t\tfile_path: %s length: %ld\n", file_path, strlen(file_path));
-    printf("\t\tlast4chars_correct: %d header_correct: %d\n", last4chars_correct, header_correct);
+    printf("\tlast4chars_correct: %d header_correct: %d\n", last4chars_correct, header_correct);
 #endif
-    rewind(current_file); //TODO incorrect, reset to position that it had at beginning of isWavfile instead of start of file
-    return last3chars_correct && header_correct;
+    //rewind(current_file); //TODO incorrect, reset to position that it had at beginning of isWavfile instead of start of file
+    fclose(current_file);
+    return (last4chars_correct && header_correct); // ? 0 : 1;
 }
 
-int encodeWavFile(const char *file_path, FILE *wav_file) { //return number of successful encodes
+int encodeWavFile(const char *file_path) { //return number of successful encodes
     wav_header_t current_header; //TODO header gets read twice, for wav test and for encode
+    FILE *wav_file = fopen(file_path, "r");
     
     //determine file size
     fseek(wav_file, 0, SEEK_END);
@@ -222,25 +240,26 @@ int encodeWavFile(const char *file_path, FILE *wav_file) { //return number of su
     fseek(wav_file, 0, SEEK_SET); //rewind(wav_file);
 
 #ifdef DEBUG
-    printf("file_size: %ld  sizeof wav_header: %ld\n", file_size, sizeof(wav_header_t));
+    printf("%d. encode\n", encode_counter);
+    printf("\twav file_path: '%.256s'\n", file_path);
+    printf("\twav file_size: %ld\n", file_size);
 #endif
     unsigned int pcm_data_malloc_size = (file_size - sizeof(wav_header_t));
     short int *pcm_data = malloc(pcm_data_malloc_size);
     if(file_size > sizeof(wav_header_t)) {
         int read_header = fread(&current_header, sizeof(wav_header_t), 1, wav_file); //TODO order middle two parameters
-        if (read_header != 1) { //exactly one element of size 44 bytes must be read
+        if (read_header != 1) { //exactly one header element of size 44 bytes must be read
 #ifdef ERRORS
             printf(ANSI_COLOR_RED "\nError while reading wav header\n" ANSI_COLOR_RESET);
 #endif
-            return 0; //TODO, cannot be -1 because of connection to encodeCounter
+            return 0; //exit if wav header wasn't read correctly
         }
-    }
-    else {
-        return 0;
+    } else {
+        return 0; //exit if file is smaller than wav header
     }
 
 #ifdef DEBUG
-    printWavHeader(&current_header);
+    //printWavHeader(&current_header);
 #endif
 
     int read_pcm = fread(pcm_data, 1, (file_size - sizeof(wav_header_t)), wav_file);
@@ -257,7 +276,7 @@ int encodeWavFile(const char *file_path, FILE *wav_file) { //return number of su
     //int num_samples = current_header.data_bytes / (current_header.num_channels * (current_header.bit_depth/8)); //number of samples per channel
     int num_samples = current_header.data_bytes / (2 * (current_header.bit_depth/8)); //must be 2 channels, because i'm using encode_interleaved
 
-    //LAME API, every file has different settings, needs its own gfp
+    //LAME API, every file has different settings and needs its own gfp
     lame_global_flags *gfp;
     gfp = lame_init();
 
@@ -289,7 +308,7 @@ int encodeWavFile(const char *file_path, FILE *wav_file) { //return number of su
 #endif
     }
 
-    long int mp3_flush_buffer_size = 7200;
+    unsigned int mp3_flush_buffer_size = 7200;
     unsigned int mp3_flush_buffer_malloc_size = 0;
     unsigned char *mp3_flush_buffer = malloc(mp3_flush_buffer_malloc_size = mp3_flush_buffer_size);
 
@@ -299,30 +318,34 @@ int encodeWavFile(const char *file_path, FILE *wav_file) { //return number of su
     char *mp3_file_path = malloc(mp3_file_path_malloc_size = (strlen(file_path) + 1));
     strcpy(mp3_file_path, file_path);
     strncpy(mp3_file_path + strlen(mp3_file_path) - 4, ".mp3", 4);
-#ifdef DEBUG
-    printf("file_path: %s\n", file_path);
-    printf("mp3_file_path: %s\n", mp3_file_path);
-#endif
+
 
     FILE *mp3_file = fopen(mp3_file_path, "w+"); //TODO hats the difference when using wb+ ? or other mode, only difference on systems that differentiate binary and text files ?
 #ifdef DEBUG
-    printf("%d\n", mp3_file);
+    //printf("%d\n", mp3_file);
     //rewind(mp3_file); //TODO necessary ?
-    printf("8\n");
-    printf("mp3_buffer %ld, mp3_bytes %ld, mp3_file %ld\n", mp3_buffer, mp3_bytes, mp3_file);
+    //printf("8\n");
+    //printf("mp3_buffer %ld, mp3_bytes %ld, mp3_file %ld\n", mp3_buffer, mp3_bytes, mp3_file);
 #endif
-    fwrite(mp3_buffer, 1, mp3_bytes, mp3_file);
-#ifdef DEBUG
-    printf("between mp3 writes\n");
-#endif
-    fwrite(mp3_flush_buffer, 1, mp3_flush_bytes, mp3_file);
 
-#ifdef DEBUG
-    printf("after mp3 writes\n");
-#endif
+    //printf("%d. WAV: \t'%s' encoded on thread %ld\n", encode_counter, file_path, (long) pthread_self());
+    
+    fwrite(mp3_buffer, 1, mp3_bytes, mp3_file);
+    fwrite(mp3_flush_buffer, 1, mp3_flush_bytes, mp3_file);
 
     lame_mp3_tags_fid(gfp, mp3_file);
 
+#ifdef DEBUG
+    //determine mp3 file size
+    fseek(mp3_file, 0, SEEK_END);
+    long mp3_file_size = ftell(mp3_file);
+    fseek(mp3_file, 0, SEEK_SET); //rewind(mp3_file);
+    printf("\tmp3_file_path: '%s'\n", mp3_file_path);
+    printf("\tmp3 file_size: %ld\n", mp3_file_size);
+#endif
+    
+
+    fclose(wav_file);
     fclose(mp3_file);
 
     free(mp3_buffer);
@@ -345,6 +368,9 @@ int main(int argc, char **argv) {
     }
     printf("DEBUG main args end\n\n");
     printf(ANSI_COLOR_RESET);
+
+    printf("sizeof(wav_header_t): %ld\n", sizeof(wav_header_t));
+    printf("sizeof(wav_file_t): %ld\n", sizeof(wav_file_t));
 #endif
 
     if ((argc != 2) || (argv[1] == NULL)) {
@@ -353,24 +379,13 @@ int main(int argc, char **argv) {
         printf ("Example: ./main.out ./wavFiles/\n");
         return -1;
     }
-    directory_path = malloc(strlen(argv[1]) + 1); //TODO create maximum directory and filepath lengths
-    strcpy(directory_path, argv[1]);
 
+    printf("START IMPORT\n");
+    import_wav_file_path_list(argv[1]);
+
+    printf("\n");
+    printf("START ENCODE\n");
     
-    pDir = opendir (argv[1]);
-    
-
-    if (pDir == NULL) {
-#ifdef ERRORS
-        printf ("Cannot open directory '%s'\n", argv[1]);
-        printf("errno %d: %s\n", errno, strerror(errno));
-#endif
-        return 1;
-    }
-
-    //print_dir();
-    //rewinddir(pDir);
-
     if (pthread_mutex_init(&lock_encode_counter, NULL) != 0) {
 #ifdef ERRORS
         printf("\n lock_encode_counter mutex init has failed\n");
@@ -383,12 +398,10 @@ int main(int argc, char **argv) {
 #endif
         return 1; 
     }
-    
-    //encode_counter = 0;
 
     unsigned int num_cores = get_nprocs(); //TODO robust enough ?
 #ifdef PREVENT_LAG
-    unsigned int num_threads = 3; //(num_cores-1); //leave 1 core free to prevent lag (terminal output etc) and use only one thread per core, in addition to main thread
+    unsigned int num_threads = num_cores-2; // //leave 1 core free to prevent lag (terminal output etc) and use only one thread per core, in addition to main thread
 #else
     unsigned int num_threads = num_cores*2; //2 threads per core
 #endif
@@ -397,24 +410,19 @@ int main(int argc, char **argv) {
     printf("Number of Cores: %d\n", num_cores); 
     printf("Number of Threads: %d\n", num_threads); //TODO detect if there are two hardware threads per core or not, print out processor model etc
 
-    //pthread_attr_t thread_1_attributes = NULL;
-    //void (*functionPtr)(const char *);
+    //thread start parameters
     void *(*functionPtr) (void *);
     functionPtr = &encoding_thread_function;
-
-    //pthread_create(&thread_1, 0, functionPtr, file_path);
-    //pthread_create(&thread_1, thread_1_attributes, functionPtr, file_path); //thread attributes type problem
-
-    encoding_thread_parameters_t thread_params;
-    thread_params.file_path = "file_path"; //file_path;
-    thread_params.wav_file = (FILE*)"wav_file"; //wav_file; //TODO cast
+    void *data_unused = NULL;
+    //encoding_thread_parameters_t thread_params; //unused
 
     //start all threads
     for (int i=0; i<num_threads; i=i+1) {
-        int pthread_create_error = pthread_create(&(threads[i]), NULL, functionPtr, (void*)&(thread_params));
+        //int pthread_create_error = pthread_create(&(threads[i]), NULL, functionPtr, (void*)&(thread_params));
+        int pthread_create_error = pthread_create(&(threads[i]), NULL, functionPtr, data_unused);
         if(pthread_create_error != 0) {
 #ifdef ERRORS
-            printf("\nThread %d can't be created :[%s]", i, strerror(pthread_create_error));
+            printf("\nThread %d can't be created :[%s]\n", i, strerror(pthread_create_error));
 #endif
         }
     }
@@ -423,33 +431,20 @@ int main(int argc, char **argv) {
         int pthread_join_error = pthread_join(threads[i], NULL); //TODO rückgabewert ?
         if(pthread_join_error != 0) {
 #ifdef ERRORS
-            printf("\nThread %d can't be joined :[%s]", i, strerror(pthread_join_error));
+            printf("\nThread %d can't be joined :[%s]\n", i, strerror(pthread_join_error));
 #endif
         }
     }
     
-    //TODO return argument from thread gets added to encode counter
-
-
-
-
-//thread loop end
-
-    printf ("\n'%d' WAV files encoded to MP3.\n", encode_counter);
-
+    //TODO return argument from thread ?
     //TODO is close/free order important ?
-    closedir (pDir);
+
     pthread_mutex_destroy(&lock_encode_counter);
     pthread_mutex_destroy(&lock_pDir);
 
     free(threads);
 
-
-    //detectNumberOfCores();
-    //verify parameters
-    //correct number
-    //parameter must be correctly formatted and existing folder path
-
+    printf ("\n'%d' WAV files encoded to MP3.\n", encode_counter);
     printf("Exit.\n");
-    return 0; //if you return encode_counter its seen as an error/failure
+    return 0;
 }
