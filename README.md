@@ -73,7 +73,9 @@ vs code and terminal output lag
     + probably num_channels problem, test with stereo file
 
 + directories ending in wav produce error message
-
++ create thread numbering ?
++ fix crash with directory path not ending in slash
++ prevent lag better
 
 
 i tend to prefer long, readable names/identifiers instead of abbreviations that one has to be familiar with
@@ -86,3 +88,21 @@ i tend to prefer long, readable names/identifiers instead of abbreviations that 
 7 other files in folder
 3 other subdirectories
 505 total elements
+
+500 wav files
+745 files output ?
+
+
+encode_counter ist schon vor finalem output falsch
+apparently after clean_mp3 ?
+
+after make clean_mp3, 745 
+HOW ? wtf ?
+some filesystem problem
+
+create version where single thread reads directory
+
+# Known Issues
++ when running the multithreaded program the first time after "make clean_mp3", some files get encoded twice ?
+    + presumably some issue with filesystem, readdir is not properly thread-safe, even though I use locks ?
+    + TODO iterate through directory on single thread

@@ -19,7 +19,10 @@
 //MACROS
 //#define DEBUG 1
 //#define PRINT 1
-//#define ERRORS 1
+#define ERRORS 1
+#define PREVENT_LAG 1 //leave one core free for better terminal output etc, and only one thread per core
+#define MAX_PATH_LENGTH 256 //pdirent d_name is 256 chars long
+
 #define ANSI_COLOR_RED     "\x1b[31m" //for color output, errors, etc
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
@@ -29,7 +32,7 @@ volatile unsigned int encode_counter = 0;
 DIR *pDir = NULL; //TODO pointers cant be / dont need to be volatile ???
 pthread_mutex_t lock_encode_counter;
 pthread_mutex_t lock_pDir;
-char *directory_path = NULL;
+char *directory_path = NULL; //TODO make volatile ? thread safe ?, how does const work in this case ?
 
 typedef struct encoding_thread_parameters_s {
     char *file_path;
@@ -64,7 +67,7 @@ int encodeWavFile(const char *file_path, FILE *wav_file);
 void printWavHeader(const wav_header_t *current_header);
 void *encoding_thread_function(void *data);
 int isWavFile(const char *file_path, FILE *current_file);
-
+int import_wav_file_list();
 
 #endif
 

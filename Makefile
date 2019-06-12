@@ -16,6 +16,7 @@ clean_mp3:
 	# deletes all mp3 files in the folder, not just recently encoded ones
 	# TODO check for file date etc
 	rm -f ./wavFiles/*.mp3 
+	#ls ./wavFiles/
 run: main.out
 	./main.out ./wavFiles/
 test:
