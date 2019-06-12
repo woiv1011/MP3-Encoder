@@ -109,3 +109,9 @@ create version where single thread reads directory
 
 
 TODO test with large wav files to check for memory problems, buffer size etc
+TODO add license/copyright info for wav files
+TODO fix double playback speed, number of channels
+TODO fix directory path bug, path concatenation etc
+
+TODO fix all str versions to n
+TODO check all mallocs and fopens etc for free/close

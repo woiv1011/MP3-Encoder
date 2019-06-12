@@ -77,7 +77,7 @@ typedef struct wav_header {
 int encodeWavFile(const char *file_path);
 void printWavHeader(const wav_header_t *current_header);
 void *encoding_thread_function(void *data_unused);
-int isWavFile(const char *file_path);
+int is_wav_file(const char *file_path);
 int import_wav_file_path_list();
 
 #endif

@@ -1,7 +1,7 @@
 LINUX_CC=gcc
 WINDOWS_CC=x86_64-w64-mingw32-gcc
 CFLAGS= -g -Wall -static
-LIBS= libmp3lame.a -lm -pthread
+LIBS= libmp3lame_linux.a -lm -pthread
 
 DEBUG =  -I"./lame/include" -pthread
 TEST = gcc -o main.out main.c
