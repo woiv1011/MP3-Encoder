@@ -4,7 +4,7 @@ LIBS= libmp3lame_linux.a -lm -pthread
 
 WINDOWS_CC=x86_64-w64-mingw32-gcc
 WINDOWS_CFLAGS= -g -Wall -static -DPTW32_STATIC_LIB
-WINDOWS_LIBS=libmp3lame_windows.a -lm -pthread
+WINDOWS_LIBS= libmp3lame_windows.a -lm -pthread
 
 main.out: main.o
 	$(CC) $(CFLAGS) -o main.out main.o $(LIBS)

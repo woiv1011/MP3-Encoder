@@ -6,14 +6,8 @@
 # LAME
 [LAME](http://lame.sourceforge.net/) is subject to its own copyright and license terms
 
-
-
-
-
-
-
 # WAV sample file sources (not included)
-https://archive.org/details/onclassical-quality-wav-audio-files-of-classical-music
-http://www.ee.columbia.edu/~dpwe/sounds/music/
-https://archive.org/details/LvB_5_1
++ https://archive.org/details/onclassical-quality-wav-audio-files-of-classical-music
++ http://www.ee.columbia.edu/~dpwe/sounds/music/
++ https://archive.org/details/LvB_5_1
 
