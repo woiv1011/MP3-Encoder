@@ -6,6 +6,8 @@
   "files.associations": {
     "lame.h": "c",
     "memory": "c",
-    "xlocale": "c"
+    "xlocale": "c",
+    "ostream": "c",
+    "xutility": "c"
 }
 }

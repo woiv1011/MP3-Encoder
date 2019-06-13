@@ -112,6 +112,19 @@ TODO test with large wav files to check for memory problems, buffer size etc
 TODO add license/copyright info for wav files
 TODO fix double playback speed, number of channels
 TODO fix directory path bug, path concatenation etc
+TODO africa toto
 
 TODO fix all str versions to n
 TODO check all mallocs and fopens etc for free/close
+
+
+# WAV file sources
+https://archive.org/details/onclassical-quality-wav-audio-files-of-classical-music
+http://www.ee.columbia.edu/~dpwe/sounds/music/
+https://archive.org/details/LvB_5_1
+
+
+ //TODO thread rückgabewert ?
+  //TODO detect if there are two hardware threads per core or not, print out processor model etc
+
+use binary file open mode on windows
