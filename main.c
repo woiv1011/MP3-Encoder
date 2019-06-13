@@ -143,7 +143,6 @@ int import_wav_file_path_list(const char *dir_path) {
     return 0;
 }
 
-
 int is_wav_file(const char *file_path) {
 #ifdef DEBUG
     printf("\tfile_path: '%.256s'\n", file_path); 
@@ -163,9 +162,8 @@ int is_wav_file(const char *file_path) {
     int header_correct = 0;
     wav_header_t current_header;
 
-    //filter out "." and "..", anything that can't be ".wav" // TODO move this into is_wav_file()
-
     //TODO make properly case insensitive with toFloor() etc, not really necessary since combinations like ".wAv" are rarely used
+    //filter out "." and "..", anything that can't be ".wav" 
     last4chars_correct = strnlen(file_path, MAX_PATH_LENGTH) >= 4 &&
                         (0 == strncmp(".wav", (file_path + strnlen(file_path, MAX_PATH_LENGTH) - 4), 4) ||
                         0 == strncmp(".WAV", (file_path + strnlen(file_path, MAX_PATH_LENGTH) - 4), 4));
@@ -215,10 +213,10 @@ void *encoding_thread_function(void *data_unused) {
             printf("thread %ld local encode counter: %d\n", (long) pthread_self(), i);
             return NULL;
         } else {
-            int encode_successful = encodeWavFile(wav_file_path);
+            int encode_successful = encode_wav_file(wav_file_path);
             if (encode_successful) {
                 pthread_mutex_lock(&lock_encode_counter);
-                encode_counter += 1; //TODO only do this once at the end, for performance, aggregate all local thread counters, prevent locks
+                encode_counter += 1; //TODO only do this once at the end for performance, aggregate all local thread counters, prevent locks
                 pthread_mutex_unlock(&lock_encode_counter);
             } else {
                 printf("encode '%.256s' failed on thread: %ld\n", wav_file_path, (long) pthread_self());
@@ -272,7 +270,7 @@ int read_header(FILE *current_file, wav_header_t *current_header) {
     return output;
 }
 
-int encodeWavFile(const char *file_path) {
+int encode_wav_file(const char *file_path) {
     wav_header_t current_header;
     FILE *wav_file = fopen(file_path, "rb");
     
@@ -400,7 +398,7 @@ int encodeWavFile(const char *file_path) {
 }
 
 #ifdef DEBUG
-void printWavHeader(const wav_header_t *current_header) {
+void print_wav_header(const wav_header_t *current_header) {
     //printf(ANSI_COLOR_YELLOW);
     printf("\nDEBUG wav header:"  "\n");
     printf("\tsizeof wav header: %ld\n", sizeof(wav_header_t));

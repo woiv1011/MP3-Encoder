@@ -19,7 +19,9 @@
     #include <sys/sysinfo.h>
 #endif
 
-#include "./lame/include/lame.h"
+#include "./lame.h" //windows
+//#include "./lame/include/lame.h" //windows
+//#include <lame/lame.h>
 
 //#define DEBUG 1
 #define ERRORS 1
@@ -82,8 +84,8 @@ typedef struct wav_header {
 } __attribute__((packed)) wav_header_t;
 #pragma pack(pop)
 
-int encodeWavFile(const char *file_path);
-void printWavHeader(const wav_header_t *current_header);
+int encode_wav_file(const char *file_path);
+void print_wav_header(const wav_header_t *current_header);
 void *encoding_thread_function(void *data_unused);
 int is_wav_file(const char *file_path);
 int import_wav_file_path_list();
