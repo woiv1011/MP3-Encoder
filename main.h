@@ -88,7 +88,7 @@ int encode_wav_file(const char *file_path);
 void print_wav_header(const wav_header_t *current_header);
 void *encoding_thread_function(void *data_unused);
 int is_wav_file(const char *file_path);
-int import_wav_file_path_list();
+int import_wav_file_list();
 int deallocate_wav_file_list();
 int read_header(FILE *current_file, wav_header_t *current_header);
 int get_number_of_processors();

@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     }
 
     printf("START IMPORT\n");
-    import_wav_file_path_list(argv[1]);
+    import_wav_file_list(argv[1]);
 
     printf("\n");
     printf("START ENCODE\n");
@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
 }
 
 //single-thread import, dirent.h readdir() causes certain bugs when multithreaded, even with locks
-int import_wav_file_path_list(const char *dir_path) {
+int import_wav_file_list(const char *dir_path) {
     //parameter must be correctly formatted and existing folder path
     char directory_path[MAX_PATH_LENGTH];
     strncpy(directory_path, dir_path, MAX_PATH_LENGTH);
@@ -437,14 +437,13 @@ int deallocate_wav_file_list() {
     return 0;
 }
 
-#ifdef WIN32
+
 int get_number_of_processors() {
+#ifdef WIN32
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);
     return sysinfo.dwNumberOfProcessors;
-}
 #else
-int get_number_of_processors() {
     return get_nprocs();
-}
 #endif
+}
