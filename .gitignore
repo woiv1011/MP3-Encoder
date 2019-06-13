@@ -1,0 +1,10 @@
+hidden.md
+commands.md
+#/LAME/*
+.vscode/ipch/*
+*.o
+*.mp3
+#*.wav
+#*.out
+
+lame
