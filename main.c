@@ -219,7 +219,9 @@ void *encoding_thread_function(void *data_unused) {
                 encode_counter += 1; //TODO only do this once at the end for performance, aggregate all local thread counters, prevent locks
                 pthread_mutex_unlock(&lock_encode_counter);
             } else {
+#ifdef ERRORS
                 printf("encode '%.256s' failed on thread: %ld\n", wav_file_path, (long) pthread_self());
+#endif
             }
             i=i+1;
         }
@@ -347,7 +349,9 @@ int encode_wav_file(const char *file_path) {
         mp3_bytes = lame_encode_buffer_interleaved(gfp, pcm_data, num_samples, mp3_buffer, mp3_buffer_size);
     } else {
         //more than two channels (5.1, 7.1) ? zero channels ?
+#ifdef ERRORS
         printf(ANSI_COLOR_RED "\nNumber of Channels (%d) not supported.\n" ANSI_COLOR_RESET, current_header.num_channels);
+#endif
         return -1;
     }
     
